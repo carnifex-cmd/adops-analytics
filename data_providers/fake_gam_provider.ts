@@ -5,7 +5,7 @@
 export interface Creative {
     id: string;
     name: string;
-    type: "display" | "video" | "native" | "rich_media";
+    type: "image" | "html5" | "third_party_tag" | "video";
     status: "active" | "paused" | "error" | "pending_review";
     lastFailureReason: string | null;
     loadTime: number; // in milliseconds
@@ -81,7 +81,7 @@ function getRandomTimestamp(hoursAgo: number = 24): string {
 }
 
 // Data constants
-const CREATIVE_TYPES: Creative["type"][] = ["display", "video", "native", "rich_media"];
+const CREATIVE_TYPES: Creative["type"][] = ["image", "html5", "third_party_tag", "video"];
 const CREATIVE_STATUSES: Creative["status"][] = ["active", "paused", "error", "pending_review"];
 const SIZES = ["300x250", "728x90", "160x600", "320x50", "300x600", "970x250", "320x480"];
 const ADVERTISERS = [

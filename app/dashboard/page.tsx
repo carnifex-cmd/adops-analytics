@@ -15,15 +15,21 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-    BarChart3,
-    TrendingUp,
-    TrendingDown,
     Layers,
     CheckCircle,
     XCircle,
     Activity,
 } from "lucide-react";
-import type { Creative, TelemetryEvent } from "@/data_providers/fake_gam_provider";
+import {
+    PieChart,
+    Pie,
+    Cell,
+    ResponsiveContainer,
+    Tooltip,
+    Legend,
+} from "recharts";
+import { GeoMap } from "@/components/charts/geo-map";
+import type { Creative, TelemetryEvent, GeoStats } from "@/data_providers/fake_gam_provider";
 
 interface ApiResponse<T> {
     success: boolean;
@@ -42,32 +48,49 @@ interface KpiData {
     successRate: string;
 }
 
+interface CreativeTypeData {
+    name: string;
+    value: number;
+    color: string;
+    [key: string]: string | number;
+}
+
+const CREATIVE_TYPE_COLORS: Record<string, string> = {
+    image: "#3b82f6",        // Blue
+    html5: "#10b981",        // Emerald
+    third_party_tag: "#f59e0b", // Amber
+    video: "#8b5cf6",        // Purple
+};
+
+const CREATIVE_TYPE_LABELS: Record<string, string> = {
+    image: "Image",
+    html5: "HTML5",
+    third_party_tag: "Third-party Tag",
+    video: "Video",
+};
+
 export default function DashboardPage() {
     const [kpiData, setKpiData] = useState<KpiData | null>(null);
     const [creatives, setCreatives] = useState<Creative[]>([]);
+    const [creativeTypeData, setCreativeTypeData] = useState<CreativeTypeData[]>([]);
+    const [geoStats, setGeoStats] = useState<GeoStats[]>([]);
     const [loading, setLoading] = useState(true);
-    const [geoData] = useState([
-        { country: "US", value: 42 },
-        { country: "UK", value: 18 },
-        { country: "DE", value: 12 },
-        { country: "FR", value: 8 },
-        { country: "IN", value: 6 },
-        { country: "CA", value: 5 },
-    ]);
 
     useEffect(() => {
         async function fetchData() {
             try {
                 setLoading(true);
 
-                // Fetch creatives and telemetry in parallel
-                const [creativesRes, telemetryRes] = await Promise.all([
+                // Fetch creatives, telemetry, and geo stats in parallel
+                const [creativesRes, telemetryRes, geosRes] = await Promise.all([
                     fetch("/api/creatives?count=50"),
                     fetch("/api/telemetry?count=200"),
+                    fetch("/api/geos"),
                 ]);
 
                 const creativesData: ApiResponse<Creative[]> = await creativesRes.json();
                 const telemetryData: ApiResponse<TelemetryEvent[]> = await telemetryRes.json();
+                const geosData: ApiResponse<GeoStats[]> = await geosRes.json();
 
                 // Calculate KPIs
                 const totalCreatives = creativesData.data.length;
@@ -89,7 +112,21 @@ export default function DashboardPage() {
                     successRate,
                 });
 
+                // Calculate creative type distribution
+                const typeCounts = creativesData.data.reduce((acc, creative) => {
+                    acc[creative.type] = (acc[creative.type] || 0) + 1;
+                    return acc;
+                }, {} as Record<string, number>);
+
+                const typeData: CreativeTypeData[] = Object.entries(typeCounts).map(([type, count]) => ({
+                    name: CREATIVE_TYPE_LABELS[type] || type,
+                    value: count,
+                    color: CREATIVE_TYPE_COLORS[type] || "#6b7280",
+                }));
+
+                setCreativeTypeData(typeData);
                 setCreatives(creativesData.data.slice(0, 10));
+                setGeoStats(geosData.data);
             } catch (error) {
                 console.error("Failed to fetch data:", error);
             } finally {
@@ -135,6 +172,38 @@ export default function DashboardPage() {
         },
     ];
 
+    // Custom tooltip for the pie chart
+    const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: CreativeTypeData }> }) => {
+        if (active && payload && payload.length) {
+            const data = payload[0].payload;
+            return (
+                <div className="bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 shadow-xl">
+                    <p className="text-white font-medium">{data.name}</p>
+                    <p className="text-gray-400 text-sm">{data.value} creatives</p>
+                </div>
+            );
+        }
+        return null;
+    };
+
+    // Custom legend for the pie chart
+    const CustomLegend = ({ payload }: { payload?: Array<{ value: string; color: string }> }) => {
+        if (!payload) return null;
+        return (
+            <div className="flex flex-wrap justify-center gap-4 mt-4">
+                {payload.map((entry, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                        <div
+                            className="h-3 w-3 rounded-sm"
+                            style={{ backgroundColor: entry.color }}
+                        />
+                        <span className="text-gray-400 text-sm">{entry.value}</span>
+                    </div>
+                ))}
+            </div>
+        );
+    };
+
     return (
         <div className="space-y-6">
             {/* KPI Cards */}
@@ -176,84 +245,69 @@ export default function DashboardPage() {
 
             {/* Charts Row */}
             <div className="grid gap-6 lg:grid-cols-2">
-                {/* Performance Chart Placeholder */}
+                {/* Creative Types Pie Chart */}
                 <Card className="border-white/10 bg-[#111111]">
                     <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
                             <CardTitle className="text-sm font-medium text-gray-400 tracking-wider">
-                                PERFORMANCE DISTRIBUTION
-                            </CardTitle>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex h-[280px] items-center justify-center">
-                            {/* Donut Chart Placeholder */}
-                            <div className="relative">
-                                <div className="h-48 w-48 rounded-full border-[16px] border-emerald-500/80" />
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="h-32 w-32 rounded-full border-[16px] border-[#111111]" />
-                                </div>
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="text-center">
-                                        <p className="text-2xl font-bold text-white">
-                                            {loading ? "..." : kpiData?.successRate}
-                                        </p>
-                                        <p className="text-xs text-gray-500">Success Rate</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="mt-4 flex items-center justify-center gap-6 text-sm">
-                            <div className="flex items-center gap-2">
-                                <div className="h-3 w-3 rounded-sm bg-emerald-500" />
-                                <span className="text-gray-400">Success</span>
-                                <span className="font-medium text-white">
-                                    {kpiData?.successRate ?? "—"}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="h-3 w-3 rounded-sm bg-red-500" />
-                                <span className="text-gray-400">Failures</span>
-                                <span className="font-medium text-white">
-                                    {kpiData ? `${100 - parseFloat(kpiData.successRate)}%` : "—"}
-                                </span>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Geo Distribution */}
-                <Card className="border-white/10 bg-[#111111]">
-                    <CardHeader className="pb-2">
-                        <div className="flex items-center justify-between">
-                            <CardTitle className="text-sm font-medium text-gray-400 tracking-wider">
-                                GEO DISTRIBUTION
+                                CREATIVE TYPE DISTRIBUTION
                             </CardTitle>
                             <span className="text-sm text-gray-500">
-                                {geoData.reduce((a, b) => a + b.value, 0)}% tracked
+                                {kpiData?.totalCreatives ?? 0} total
                             </span>
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="flex h-[280px] items-center justify-center">
-                            {/* Map Placeholder */}
-                            <div className="relative w-full h-full flex items-center justify-center">
-                                <BarChart3 className="h-24 w-24 text-gray-700" />
-                                <p className="absolute bottom-4 text-sm text-gray-500">
-                                    Interactive map coming soon
-                                </p>
+                        {loading ? (
+                            <div className="flex h-[300px] items-center justify-center">
+                                <Skeleton className="h-48 w-48 rounded-full bg-white/10" />
                             </div>
+                        ) : (
+                            <div className="h-[300px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={creativeTypeData}
+                                            cx="50%"
+                                            cy="45%"
+                                            innerRadius={60}
+                                            outerRadius={100}
+                                            paddingAngle={2}
+                                            dataKey="value"
+                                            stroke="transparent"
+                                        >
+                                            {creativeTypeData.map((entry, index) => (
+                                                <Cell
+                                                    key={`cell-${index}`}
+                                                    fill={entry.color}
+                                                    className="hover:opacity-80 transition-opacity cursor-pointer"
+                                                />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip content={<CustomTooltip />} />
+                                        <Legend content={<CustomLegend />} />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* Geo Distribution Map */}
+                <Card className="border-white/10 bg-[#111111]">
+                    <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="text-sm font-medium text-gray-400 tracking-wider">
+                                GEO FAILURE RATE
+                            </CardTitle>
+                            <span className="text-sm text-gray-500">
+                                {geoStats.length} countries tracked
+                            </span>
                         </div>
-                        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-                            {geoData.map((geo) => (
-                                <Badge
-                                    key={geo.country}
-                                    variant="outline"
-                                    className="border-white/20 bg-white/5 text-gray-300"
-                                >
-                                    {geo.country} {geo.value}%
-                                </Badge>
-                            ))}
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <div className="h-[340px]">
+                            <GeoMap data={geoStats} loading={loading} />
                         </div>
                     </CardContent>
                 </Card>
@@ -363,9 +417,13 @@ export default function DashboardPage() {
                                             <TableCell>
                                                 <Badge
                                                     variant="outline"
-                                                    className="border-white/20 text-gray-400 capitalize"
+                                                    className="border-white/20 capitalize"
+                                                    style={{
+                                                        color: CREATIVE_TYPE_COLORS[creative.type] || "#9ca3af",
+                                                        borderColor: `${CREATIVE_TYPE_COLORS[creative.type]}50` || "#9ca3af50",
+                                                    }}
                                                 >
-                                                    {creative.type.replace("_", " ")}
+                                                    {CREATIVE_TYPE_LABELS[creative.type] || creative.type}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell className="text-gray-400">
@@ -384,12 +442,12 @@ export default function DashboardPage() {
                                             <TableCell>
                                                 <Badge
                                                     className={`border ${creative.status === "active"
-                                                            ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/50"
-                                                            : creative.status === "error"
-                                                                ? "bg-red-500/20 text-red-400 border-red-500/50"
-                                                                : creative.status === "paused"
-                                                                    ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/50"
-                                                                    : "bg-blue-500/20 text-blue-400 border-blue-500/50"
+                                                        ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/50"
+                                                        : creative.status === "error"
+                                                            ? "bg-red-500/20 text-red-400 border-red-500/50"
+                                                            : creative.status === "paused"
+                                                                ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/50"
+                                                                : "bg-blue-500/20 text-blue-400 border-blue-500/50"
                                                         }`}
                                                 >
                                                     {creative.status}
