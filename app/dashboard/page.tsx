@@ -27,6 +27,13 @@ import {
     ResponsiveContainer,
     Tooltip,
     Legend,
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Area,
+    AreaChart,
 } from "recharts";
 import { GeoMap } from "@/components/charts/geo-map";
 import type { Creative, TelemetryEvent, GeoStats } from "@/data_providers/fake_gam_provider";
@@ -55,6 +62,15 @@ interface CreativeTypeData {
     [key: string]: string | number;
 }
 
+interface TimelineData {
+    time: string;
+    hour: number;
+    failures: number;
+    served: number;
+    total: number;
+    [key: string]: string | number;
+}
+
 const CREATIVE_TYPE_COLORS: Record<string, string> = {
     image: "#3b82f6",        // Blue
     html5: "#10b981",        // Emerald
@@ -74,6 +90,7 @@ export default function DashboardPage() {
     const [creatives, setCreatives] = useState<Creative[]>([]);
     const [creativeTypeData, setCreativeTypeData] = useState<CreativeTypeData[]>([]);
     const [geoStats, setGeoStats] = useState<GeoStats[]>([]);
+    const [timelineData, setTimelineData] = useState<TimelineData[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -127,6 +144,44 @@ export default function DashboardPage() {
                 setCreativeTypeData(typeData);
                 setCreatives(creativesData.data.slice(0, 10));
                 setGeoStats(geosData.data);
+
+                // Calculate failures over time (group by hour)
+                const now = new Date();
+                const hourlyData: Record<number, { failures: number; served: number; total: number }> = {};
+
+                // Initialize last 24 hours
+                for (let i = 23; i >= 0; i--) {
+                    hourlyData[i] = { failures: 0, served: 0, total: 0 };
+                }
+
+                // Group telemetry by hour
+                telemetryData.data.forEach((event) => {
+                    const eventTime = new Date(event.timestamp);
+                    const hoursAgo = Math.floor((now.getTime() - eventTime.getTime()) / (1000 * 60 * 60));
+
+                    if (hoursAgo >= 0 && hoursAgo < 24) {
+                        hourlyData[hoursAgo].total++;
+                        if (event.status === "served") {
+                            hourlyData[hoursAgo].served++;
+                        } else {
+                            hourlyData[hoursAgo].failures++;
+                        }
+                    }
+                });
+
+                // Convert to array format for Recharts
+                const timeline: TimelineData[] = Object.entries(hourlyData)
+                    .map(([hoursAgo, data]) => {
+                        const hour = new Date(now.getTime() - parseInt(hoursAgo) * 60 * 60 * 1000);
+                        return {
+                            time: hour.toLocaleTimeString('en-US', { hour: '2-digit', hour12: true }),
+                            hour: parseInt(hoursAgo),
+                            ...data,
+                        };
+                    })
+                    .reverse();
+
+                setTimelineData(timeline);
             } catch (error) {
                 console.error("Failed to fetch data:", error);
             } finally {
@@ -312,6 +367,93 @@ export default function DashboardPage() {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Failures Over Time Chart */}
+            <Card className="border-white/10 bg-[#111111]">
+                <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm font-medium text-gray-400 tracking-wider">
+                            FAILURES OVER TIME (24H)
+                        </CardTitle>
+                        <span className="text-sm text-gray-500">
+                            {timelineData.reduce((sum, d) => sum + d.failures, 0)} total failures
+                        </span>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    {loading ? (
+                        <div className="flex h-[200px] items-center justify-center">
+                            <Skeleton className="h-full w-full bg-white/10" />
+                        </div>
+                    ) : (
+                        <div className="h-[200px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={timelineData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                    <defs>
+                                        <linearGradient id="failureGradient" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                                        </linearGradient>
+                                        <linearGradient id="servedGradient" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                                    <XAxis
+                                        dataKey="time"
+                                        tick={{ fill: '#6b7280', fontSize: 11 }}
+                                        axisLine={{ stroke: '#ffffff10' }}
+                                        tickLine={false}
+                                        interval={3}
+                                    />
+                                    <YAxis
+                                        tick={{ fill: '#6b7280', fontSize: 11 }}
+                                        axisLine={{ stroke: '#ffffff10' }}
+                                        tickLine={false}
+                                    />
+                                    <Tooltip
+                                        contentStyle={{
+                                            backgroundColor: '#1a1a1a',
+                                            border: '1px solid rgba(255,255,255,0.1)',
+                                            borderRadius: '8px',
+                                            boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                                        }}
+                                        labelStyle={{ color: '#fff', fontWeight: 600, marginBottom: 4 }}
+                                        itemStyle={{ color: '#9ca3af', fontSize: 12 }}
+                                    />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="served"
+                                        stroke="#10b981"
+                                        strokeWidth={2}
+                                        fill="url(#servedGradient)"
+                                        name="Served"
+                                    />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="failures"
+                                        stroke="#ef4444"
+                                        strokeWidth={2}
+                                        fill="url(#failureGradient)"
+                                        name="Failures"
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    )}
+                    <div className="mt-4 flex items-center justify-center gap-6 text-sm">
+                        <div className="flex items-center gap-2">
+                            <div className="h-3 w-3 rounded-sm bg-emerald-500" />
+                            <span className="text-gray-400">Served</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="h-3 w-3 rounded-sm bg-red-500" />
+                            <span className="text-gray-400">Failures</span>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
 
             {/* Data Table */}
             <Card className="border-white/10 bg-[#111111]">
