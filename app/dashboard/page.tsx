@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRefresh } from "@/context/RefreshContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -86,6 +87,7 @@ const CREATIVE_TYPE_LABELS: Record<string, string> = {
 };
 
 export default function DashboardPage() {
+    const { lastRefresh } = useRefresh();
     const [kpiData, setKpiData] = useState<KpiData | null>(null);
     const [creatives, setCreatives] = useState<Creative[]>([]);
     const [creativeTypeData, setCreativeTypeData] = useState<CreativeTypeData[]>([]);
@@ -190,7 +192,7 @@ export default function DashboardPage() {
         }
 
         fetchData();
-    }, []);
+    }, [lastRefresh]);
 
     const kpiCards = [
         {
