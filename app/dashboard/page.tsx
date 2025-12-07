@@ -4,16 +4,6 @@ import { useEffect, useState } from "react";
 import { useRefresh } from "@/context/RefreshContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
     Layers,
@@ -28,8 +18,6 @@ import {
     ResponsiveContainer,
     Tooltip,
     Legend,
-    LineChart,
-    Line,
     XAxis,
     YAxis,
     CartesianGrid,
@@ -457,157 +445,6 @@ export default function DashboardPage() {
                 </CardContent>
             </Card>
 
-            {/* Data Table */}
-            <Card className="border-white/10 bg-[#111111]">
-                <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <input
-                                type="text"
-                                placeholder="Search creatives..."
-                                className="h-9 w-64 rounded-md border border-white/10 bg-white/5 px-3 text-sm text-white placeholder-gray-500 focus:border-white/20 focus:outline-none"
-                            />
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Tabs defaultValue="all">
-                                <TabsList className="bg-white/5 border border-white/10">
-                                    <TabsTrigger
-                                        value="all"
-                                        className="text-xs data-[state=active]:bg-white/10"
-                                    >
-                                        ALL
-                                    </TabsTrigger>
-                                    <TabsTrigger
-                                        value="active"
-                                        className="text-xs data-[state=active]:bg-white/10"
-                                    >
-                                        ACTIVE
-                                    </TabsTrigger>
-                                    <TabsTrigger
-                                        value="error"
-                                        className="text-xs data-[state=active]:bg-white/10"
-                                    >
-                                        ERROR
-                                    </TabsTrigger>
-                                </TabsList>
-                            </Tabs>
-                            <span className="text-sm text-gray-500">
-                                {creatives.length} creatives
-                            </span>
-                        </div>
-                    </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                    <ScrollArea className="h-[300px]">
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="border-white/10 hover:bg-transparent">
-                                    <TableHead className="text-xs font-medium text-gray-500">
-                                        CREATIVE ID
-                                    </TableHead>
-                                    <TableHead className="text-xs font-medium text-gray-500">
-                                        NAME
-                                    </TableHead>
-                                    <TableHead className="text-xs font-medium text-gray-500">
-                                        TYPE
-                                    </TableHead>
-                                    <TableHead className="text-xs font-medium text-gray-500">
-                                        LOAD TIME
-                                    </TableHead>
-                                    <TableHead className="text-xs font-medium text-gray-500">
-                                        STATUS
-                                    </TableHead>
-                                    <TableHead className="text-xs font-medium text-gray-500">
-                                        FAILURE REASON
-                                    </TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {loading ? (
-                                    Array.from({ length: 5 }).map((_, i) => (
-                                        <TableRow key={i} className="border-white/10">
-                                            <TableCell>
-                                                <Skeleton className="h-4 w-20 bg-white/10" />
-                                            </TableCell>
-                                            <TableCell>
-                                                <Skeleton className="h-4 w-32 bg-white/10" />
-                                            </TableCell>
-                                            <TableCell>
-                                                <Skeleton className="h-4 w-16 bg-white/10" />
-                                            </TableCell>
-                                            <TableCell>
-                                                <Skeleton className="h-4 w-12 bg-white/10" />
-                                            </TableCell>
-                                            <TableCell>
-                                                <Skeleton className="h-4 w-16 bg-white/10" />
-                                            </TableCell>
-                                            <TableCell>
-                                                <Skeleton className="h-4 w-24 bg-white/10" />
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                ) : (
-                                    creatives.map((creative) => (
-                                        <TableRow
-                                            key={creative.id}
-                                            className="border-white/10 hover:bg-white/5 cursor-pointer"
-                                        >
-                                            <TableCell className="font-mono text-sm text-gray-400">
-                                                {creative.id}
-                                            </TableCell>
-                                            <TableCell className="font-medium text-white">
-                                                {creative.name}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge
-                                                    variant="outline"
-                                                    className="border-white/20 capitalize"
-                                                    style={{
-                                                        color: CREATIVE_TYPE_COLORS[creative.type] || "#9ca3af",
-                                                        borderColor: `${CREATIVE_TYPE_COLORS[creative.type]}50` || "#9ca3af50",
-                                                    }}
-                                                >
-                                                    {CREATIVE_TYPE_LABELS[creative.type] || creative.type}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className="text-gray-400">
-                                                <span
-                                                    className={
-                                                        creative.loadTime > 1000
-                                                            ? "text-yellow-400"
-                                                            : creative.loadTime > 2000
-                                                                ? "text-red-400"
-                                                                : ""
-                                                    }
-                                                >
-                                                    {creative.loadTime}ms
-                                                </span>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge
-                                                    className={`border ${creative.status === "active"
-                                                        ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/50"
-                                                        : creative.status === "error"
-                                                            ? "bg-red-500/20 text-red-400 border-red-500/50"
-                                                            : creative.status === "paused"
-                                                                ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/50"
-                                                                : "bg-blue-500/20 text-blue-400 border-blue-500/50"
-                                                        }`}
-                                                >
-                                                    {creative.status}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className="text-gray-500 text-sm max-w-[200px] truncate">
-                                                {creative.lastFailureReason || "—"}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </ScrollArea>
-                </CardContent>
-            </Card>
         </div>
     );
 }
