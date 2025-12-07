@@ -203,52 +203,80 @@ export function getCreatives(count: number = 20): Creative[] {
     return creatives.sort((a, b) => b.impressions - a.impressions);
 }
 
+// Persistent cache for simulating real-time streaming
+const PERSISTENT_CREATIVE_IDS = Array.from({ length: 15 }, () => generateId("CR"));
+const PERSISTENT_SLOT_IDS = Array.from({ length: 8 }, () => generateId("SLOT"));
+let telemetryCache: TelemetryEvent[] = [];
+
 /**
- * Get telemetry events with realistic fake data
+ * Generate a single new telemetry event with current timestamp
  */
-export function getTelemetry(count: number = 100): TelemetryEvent[] {
-    const events: TelemetryEvent[] = [];
-    const creativeIds = Array.from({ length: 15 }, () => generateId("CR"));
-    const slotIds = Array.from({ length: 8 }, () => generateId("SLOT"));
+function generateNewEvent(): TelemetryEvent {
+    const status: TelemetryEvent["status"] =
+        Math.random() < 0.7
+            ? "served"
+            : randomFromArray(["failed", "timeout", "blocked"]);
 
-    for (let i = 0; i < count; i++) {
-        // Weight towards "served" status (70% served, 30% other)
-        const status: TelemetryEvent["status"] =
-            Math.random() < 0.7
-                ? "served"
-                : randomFromArray(["failed", "timeout", "blocked"]);
-
-        let reason: string | null = null;
-        if (status !== "served") {
-            const reasons = TELEMETRY_REASONS[status];
-            reason = reasons ? randomFromArray(reasons) : null;
-        }
-
-        const country = randomFromArray(COUNTRIES);
-
-        events.push({
-            creativeId: randomFromArray(creativeIds),
-            slotId: randomFromArray(slotIds),
-            status,
-            reason,
-            timestamp: getRandomTimestamp(24),
-            geo: {
-                country: country.country,
-                region: randomFromArray(REGIONS),
-                city: randomFromArray(CITIES),
-            },
-            device: {
-                type: randomFromArray(DEVICE_TYPES),
-                os: randomFromArray(OPERATING_SYSTEMS),
-                browser: randomFromArray(BROWSERS),
-            },
-            latency: randomInt(20, 800),
-        });
+    let reason: string | null = null;
+    if (status !== "served") {
+        const reasons = TELEMETRY_REASONS[status];
+        reason = reasons ? randomFromArray(reasons) : null;
     }
 
-    return events.sort(
-        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    );
+    const country = randomFromArray(COUNTRIES);
+
+    return {
+        creativeId: randomFromArray(PERSISTENT_CREATIVE_IDS),
+        slotId: randomFromArray(PERSISTENT_SLOT_IDS),
+        status,
+        reason,
+        timestamp: new Date().toISOString(), // Current timestamp for real-time feel
+        geo: {
+            country: country.country,
+            region: randomFromArray(REGIONS),
+            city: randomFromArray(CITIES),
+        },
+        device: {
+            type: randomFromArray(DEVICE_TYPES),
+            os: randomFromArray(OPERATING_SYSTEMS),
+            browser: randomFromArray(BROWSERS),
+        },
+        latency: randomInt(20, 800),
+    };
+}
+
+/**
+ * Get telemetry events with real-time streaming simulation.
+ * Each call generates 3-8 new events and keeps only the last 50.
+ */
+export function getTelemetry(count: number = 50): TelemetryEvent[] {
+    // Generate a few new random events (3-8) to simulate streaming
+    const newEventCount = randomInt(3, 8);
+
+    for (let i = 0; i < newEventCount; i++) {
+        telemetryCache.unshift(generateNewEvent());
+    }
+
+    // Keep only the last 50 events
+    telemetryCache = telemetryCache.slice(0, 50);
+
+    // If cache is empty or very small, seed with initial events
+    if (telemetryCache.length < 20) {
+        const seedCount = 50 - telemetryCache.length;
+        for (let i = 0; i < seedCount; i++) {
+            const event = generateNewEvent();
+            // Spread timestamps over last 24 hours for initial seed
+            event.timestamp = getRandomTimestamp(24);
+            telemetryCache.push(event);
+        }
+        // Sort by timestamp
+        telemetryCache.sort(
+            (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        );
+    }
+
+    // Return requested count (or all if count > cache size)
+    return telemetryCache.slice(0, Math.min(count, telemetryCache.length));
 }
 
 /**
