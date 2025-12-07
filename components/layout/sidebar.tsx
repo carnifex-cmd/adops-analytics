@@ -14,6 +14,7 @@ import {
     Settings,
     ChevronLeft,
     ChevronRight,
+    Info,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -42,6 +43,11 @@ const sidebarItems = [
         name: "System Health",
         href: "/dashboard/system-health",
         icon: Activity,
+    },
+    {
+        name: "About",
+        href: "/about",
+        icon: Info,
     },
 ];
 
