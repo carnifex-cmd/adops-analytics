@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
     Activity,
@@ -12,16 +14,27 @@ import {
     BarChart3,
     RefreshCw,
     Database,
-    Bell,
     LineChart,
     Cpu,
     Layers,
+    ArrowLeft,
 } from "lucide-react";
 
 export default function AboutPage() {
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-white">
             <div className="container mx-auto px-6 py-12 max-w-5xl">
+                {/* Back Button */}
+                <Link href="/dashboard">
+                    <Button
+                        variant="ghost"
+                        className="mb-8 text-gray-400 hover:text-white hover:bg-white/10"
+                    >
+                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        Back to Dashboard
+                    </Button>
+                </Link>
+
                 {/* Hero Section */}
                 <div className="text-center mb-16">
                     <Badge className="mb-4 bg-blue-500/20 text-blue-400 border-blue-500/50">
