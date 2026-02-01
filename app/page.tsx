@@ -1,5 +1,19 @@
-import { redirect } from "next/navigation";
+import { Navbar } from "@/components/landing/Navbar";
+import { HeroSection } from "@/components/landing/HeroSection";
+import { DashboardPreview } from "@/components/landing/DashboardPreview";
+import { FeaturesSection } from "@/components/landing/FeaturesSection";
+import { TrustSection } from "@/components/landing/TrustSection";
+import { Footer } from "@/components/landing/Footer";
 
 export default function Home() {
-  redirect("/dashboard");
+  return (
+    <main className="min-h-screen bg-[#0a0a0a]">
+      <Navbar />
+      <HeroSection />
+      <DashboardPreview />
+      <FeaturesSection />
+      <TrustSection />
+      <Footer />
+    </main>
+  );
 }
