@@ -119,9 +119,15 @@ export function Footer() {
 
                 {/* Bottom Bar */}
                 <div className="mt-16 pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <p className="text-sm text-gray-500">
-                        © {new Date().getFullYear()} AdOps Analytics. All rights reserved.
-                    </p>
+                    <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
+                        <p className="text-sm text-gray-500">
+                            © {new Date().getFullYear()} AdOps Analytics. All rights reserved.
+                        </p>
+                        <span className="hidden md:inline text-gray-700">•</span>
+                        <p className="text-sm text-gray-500">
+                            Developed by <a href="https://shardulsawant.sbs" target="_blank" rel="noopener noreferrer" className="text-emerald-400 font-medium hover:text-emerald-300 transition-colors">Shardul</a>
+                        </p>
+                    </div>
                     <div className="flex items-center gap-6 text-sm text-gray-500">
                         <Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link>
                         <Link href="#" className="hover:text-white transition-colors">Terms of Service</Link>

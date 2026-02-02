@@ -275,11 +275,11 @@ export function ContactSection() {
                                 Reach out directly at:
                             </p>
                             <a
-                                href="mailto:hello@adopsanalytics.com"
+                                href="mailto:shardul855@gmail.com"
                                 className="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300 transition-colors font-medium"
                             >
                                 <Mail className="h-4 w-4" />
-                                hello@adopsanalytics.com
+                                shardul855@gmail.com
                             </a>
                         </div>
                     </div>
