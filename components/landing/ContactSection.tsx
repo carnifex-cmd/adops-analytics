@@ -14,16 +14,38 @@ export function ContactSection() {
         message: "",
     });
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        // Handle form submission logic here
-        setIsSubmitted(true);
-        // Reset form after showing success
-        setTimeout(() => {
-            setIsSubmitted(false);
-            setFormData({ name: "", email: "", company: "", message: "" });
-        }, 3000);
+        setIsSubmitting(true);
+        setError(null);
+
+        try {
+            const response = await fetch("https://formspree.io/f/xeezlpaj", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(formData),
+            });
+
+            if (response.ok) {
+                setIsSubmitted(true);
+                // Reset form after showing success
+                setTimeout(() => {
+                    setIsSubmitted(false);
+                    setFormData({ name: "", email: "", company: "", message: "" });
+                }, 5000);
+            } else {
+                setError("Something went wrong. Please try again.");
+            }
+        } catch (err) {
+            setError("Failed to send message. Please try again.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const handleChange = (
@@ -161,13 +183,21 @@ export function ContactSection() {
                                         />
                                     </div>
 
+                                    {/* Error Message */}
+                                    {error && (
+                                        <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
+                                            <p className="text-red-400 text-sm">{error}</p>
+                                        </div>
+                                    )}
+
                                     {/* Submit Button */}
                                     <Button
                                         type="submit"
                                         size="lg"
-                                        className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-medium py-3 text-base h-auto group rounded-xl"
+                                        disabled={isSubmitting}
+                                        className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-medium py-3 text-base h-auto group rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        Send Message
+                                        {isSubmitting ? "Sending..." : "Send Message"}
                                         <Send className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                                     </Button>
                                 </form>
