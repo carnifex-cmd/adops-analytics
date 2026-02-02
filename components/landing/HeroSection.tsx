@@ -53,7 +53,7 @@ export function HeroSection() {
                             size="lg"
                             className="bg-emerald-500 hover:bg-emerald-600 text-white font-medium px-8 py-3 text-base h-auto group rounded-full"
                         >
-                            Get Started
+                            Demo Dashboard
                             <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                         </Button>
                     </Link>

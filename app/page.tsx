@@ -3,6 +3,7 @@ import { HeroSection } from "@/components/landing/HeroSection";
 import { DashboardPreview } from "@/components/landing/DashboardPreview";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
 import { TrustSection } from "@/components/landing/TrustSection";
+import { ContactSection } from "@/components/landing/ContactSection";
 import { Footer } from "@/components/landing/Footer";
 
 export default function Home() {
@@ -13,6 +14,7 @@ export default function Home() {
       <DashboardPreview />
       <FeaturesSection />
       <TrustSection />
+      <ContactSection />
       <Footer />
     </main>
   );

@@ -44,7 +44,7 @@ export function Navbar() {
                         <Button
                             className="bg-emerald-500 hover:bg-emerald-600 text-white font-medium px-5"
                         >
-                            View Dashboard
+                            Demo Dashboard
                         </Button>
                     </Link>
                 </div>
