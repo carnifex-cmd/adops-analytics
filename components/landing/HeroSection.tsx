@@ -51,7 +51,7 @@ export function HeroSection() {
                     <Link href="/dashboard">
                         <Button
                             size="lg"
-                            className="bg-emerald-500 hover:bg-emerald-600 text-white font-medium px-8 py-6 text-base h-auto group"
+                            className="bg-emerald-500 hover:bg-emerald-600 text-white font-medium px-8 py-3 text-base h-auto group rounded-full"
                         >
                             Get Started
                             <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -61,7 +61,7 @@ export function HeroSection() {
                         <Button
                             variant="outline"
                             size="lg"
-                            className="border-white/20 bg-white/5 hover:bg-white/10 text-white font-medium px-8 py-6 text-base h-auto"
+                            className="border-white/20 bg-white/5 hover:bg-white/10 text-white font-medium px-8 py-3 text-base h-auto rounded-full"
                         >
                             Learn More
                         </Button>
