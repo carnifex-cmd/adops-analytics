@@ -1,8 +1,12 @@
-import Link from "next/link";
+"use client";
+
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Navbar } from "@/components/landing/Navbar";
+import { Footer } from "@/components/landing/Footer";
 import {
     Activity,
     Globe,
@@ -21,19 +25,21 @@ import {
 } from "lucide-react";
 
 export default function AboutPage() {
+    const router = useRouter();
+
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-white">
-            <div className="container mx-auto px-6 py-12 max-w-5xl">
+            <Navbar />
+            <div className="container mx-auto px-6 pt-24 pb-12 max-w-5xl">
                 {/* Back Button */}
-                <Link href="/dashboard">
-                    <Button
-                        variant="ghost"
-                        className="mb-8 text-gray-400 hover:text-white hover:bg-white/10"
-                    >
-                        <ArrowLeft className="h-4 w-4 mr-2" />
-                        Back to Dashboard
-                    </Button>
-                </Link>
+                <Button
+                    variant="ghost"
+                    onClick={() => router.back()}
+                    className="mb-8 text-gray-400 hover:text-white hover:bg-white/10"
+                >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back
+                </Button>
 
                 {/* Hero Section */}
                 <div className="text-center mb-16">
@@ -247,16 +253,17 @@ export default function AboutPage() {
                     </CardContent>
                 </Card>
 
-                {/* Footer */}
+                {/* Built By */}
                 <Separator className="bg-white/10 mb-8" />
-                <footer className="text-center">
+                <div className="text-center mb-12">
                     <p className="text-gray-400">
                         Built by{" "}
                         <span className="text-white font-semibold">Shardul Sawant</span>
                         {" "}— AdTech & Full-Stack Engineer
                     </p>
-                </footer>
+                </div>
             </div>
+            <Footer />
         </div>
     );
 }

@@ -15,10 +15,16 @@ import {
     ChevronLeft,
     ChevronRight,
     Info,
+    Home,
 } from "lucide-react";
 import { useState } from "react";
 
 const sidebarItems = [
+    {
+        name: "Home",
+        href: "/",
+        icon: Home,
+    },
     {
         name: "Overview",
         href: "/dashboard",
