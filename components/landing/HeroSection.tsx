@@ -48,15 +48,15 @@ export function HeroSection() {
 
                 {/* CTAs */}
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <Link href="/dashboard">
+                    <a href="#contact">
                         <Button
                             size="lg"
                             className="bg-emerald-500 hover:bg-emerald-600 text-white font-medium px-8 py-3 text-base h-auto group rounded-full"
                         >
-                            Demo Dashboard
+                            Get Started
                             <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                         </Button>
-                    </Link>
+                    </a>
                     <a href="#features">
                         <Button
                             variant="outline"
